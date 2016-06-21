@@ -8,6 +8,8 @@
 #
 # Switch 1 reset/start de game
 # Switch 2 stop counter
+#
+# using RPi.GPIO needs to run as root (use sudo)
 
 # libraries used
 import RPi.GPIO as GPIO
@@ -16,6 +18,7 @@ from time import sleep
 print("Starting...")
 
 # select here your real ports used
+# from the board pinout perspective
 RedLed = 16
 GreenLed = 18
 Switch1 = 40
@@ -31,13 +34,16 @@ GPIO.setup(Switch2, GPIO.IN)
 
 
 # setup variables 
-GameTime = 0.05
+BlinkFrequency = 10
 
-print("Ready to play")
-print("Ctrl+C to quit")
 
 # main loop handling the keyboard interrupt
 try:
+
+	print("Ready to play")
+	print("Ctrl+C to quit")
+	HalfPeriod = (1.0 / BlinkFrequency) / 2.0
+
 	while True:
 		# wait until Switch1 is pressed
 		while True:
@@ -55,27 +61,30 @@ try:
 				break;
 
 		# start the game and wait until Switch2 is pressed for the result
+		print("Press Switch2 to know your fate...")
 		while True:
 			GPIO.output(RedLed, True)
 			GPIO.output(GreenLed, False)
 			Alive = False
-			sleep(GameTime)
+			sleep(HalfPeriod)
 			if GPIO.input(Switch2) == 0:
 				break
 			GPIO.output(RedLed, False)
 			GPIO.output(GreenLed, True)
-			sleep(GameTime) 
+			sleep(HalfPeriod) 
 			Alive = True
 			if GPIO.input(Switch2) == 0:
 				break
 
 		# print the result
+		print("")
 		if Alive == True:
 			print("You live")
 		else:
 			print("You die")
 
 		# keep result until a new game
+		print("")
 		print("Press Switch1 to a new game")
 		while GPIO.input(Switch1) == 1:
 			sleep(0.1)
@@ -84,9 +93,11 @@ try:
 		
 # Ctrl+C stops the program
 except KeyboardInterrupt:
+	print("")
 	print("Exiting game...")
+
 finally:
 	# finished
 	GPIO.cleanup()
 	print("end")
-
+	print("")
